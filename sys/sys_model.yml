@@ -1,0 +1,3 @@
+name: wist-atlas-stack
+kind: docker-compose
+vender: 'dayu-sec'

@@ -1,0 +1,70 @@
+# wist-atlas-stack — 资产与运行拓扑服务 + 可视化前端 + PostgreSQL
+#
+# 端口约定（宿主:容器；宿主端口与 BIND_IP 见 sys/setting/vars.yml）：
+#   web       ${WEB_BIND_IP}:${WEB_HOST_PORT}:80       前端入口（静态 + /api 反代）
+#   atlas     ${ATLAS_BIND_IP}:${ATLAS_HOST_PORT}:8080 后端 API（调试用，可只走 compose 网络）
+#   postgres  ${PG_BIND_IP}:${PG_HOST_PORT}:5432       主存储
+#
+name: wist-atlas-stack
+
+# 容器内端口是应用契约，写死；宿主端口才是变量。
+#
+# 单实例保障：钉固定 container_name，避免两份同名目录的栈互相接管容器。
+services:
+  postgres:
+    container_name: wist-atlas-stack-postgres
+    image: ${PG_REGISTRY}/postgres:${PG_IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      TZ: ${TZ}
+    ports:
+      - "${PG_BIND_IP}:${PG_HOST_PORT}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  atlas:
+    container_name: wist-atlas-stack-atlas
+    image: ${ATLAS_REGISTRY}/wist-atlas:${ATLAS_IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${PG_USER}:${PG_PASSWORD}@postgres:5432/${PG_DB}
+      TZ: ${TZ}
+    ports:
+      - "${ATLAS_BIND_IP}:${ATLAS_HOST_PORT}:8080"
+    command: ["postgres-live", "serve", "--listen", "0.0.0.0:8080"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  web:
+    container_name: wist-atlas-stack-web
+    image: ${ATLAS_REGISTRY}/wist-atlas-web:${ATLAS_WEB_IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      atlas:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND_IP}:${WEB_HOST_PORT}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  postgres-data:

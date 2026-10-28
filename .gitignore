@@ -1,0 +1,10 @@
+# gops 生成物 / 现场态
+.env
+.wist/
+values/
+sys/merged_vars.yml
+sys/resolved_vars.yml
+deliver.lock
+
+# macOS
+.DS_Store

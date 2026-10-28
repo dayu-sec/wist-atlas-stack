@@ -3,6 +3,19 @@
 本文件记录 `wist-atlas-stack` 的所有重要变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1] - 2026-10-28
+
+### 修复
+
+- 后端镜像升级到 `wist-atlas v0.3.1`：修复 `v0.3.0` 健康检查在 Debian bookworm 上
+  因 glibc 版本不匹配而失败的问题。
+- 手工 compose 命令补上 `--env-file .env`：compose 文件在 `sys/` 下，默认不会读取栈根 `.env`。
+
+### 配套
+
+- 后端：`wist-atlas v0.3.1`
+- 前端：`wist-atlas-web v0.1.0`
+
 ## [0.1.0] - 2026-10-28
 
 ### 新增

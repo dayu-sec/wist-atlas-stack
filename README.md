@@ -35,7 +35,7 @@ gops run start       # 拉起 postgres / atlas / web
 
 ```bash
 cp .env.example .env
-docker compose -f sys/docker-compose.yml up -d
+docker compose -f sys/docker-compose.yml --env-file .env up -d
 ```
 
 入口：<http://127.0.0.1:8080>（默认 `WEB_BIND_IP=127.0.0.1`、`WEB_HOST_PORT=8080`）。
@@ -49,7 +49,7 @@ docker compose -f sys/docker-compose.yml up -d
 # 然后在 .env 里把两个 tag 改成 dev
 # ATLAS_IMAGE_TAG=dev
 # ATLAS_WEB_IMAGE_TAG=dev
-docker compose -f sys/docker-compose.yml up -d
+docker compose -f sys/docker-compose.yml --env-file .env up -d
 ```
 
 脚本默认读取 `../wist-atlas` 与 `../wist-atlas-web`，可用 `ATLAS_REPO` / `WEB_REPO` 覆盖。
